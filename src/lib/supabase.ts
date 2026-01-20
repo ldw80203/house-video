@@ -49,6 +49,11 @@ export async function createProperty(formData: PropertyFormData): Promise<Proper
     ? Math.round((formData.price / formData.size) * 10) / 10
     : 0
 
+  console.log('🔍 準備新增物件:', {
+    ...formData,
+    price_per_ping: pricePerPing,
+  })
+
   const { data, error } = await supabase
     .from('properties')
     .insert([
@@ -64,10 +69,17 @@ export async function createProperty(formData: PropertyFormData): Promise<Proper
     .single()
 
   if (error) {
-    console.error('Error creating property:', error)
+    console.error('❌ 新增物件失敗:', error)
+    console.error('錯誤詳情:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    })
     return null
   }
 
+  console.log('✅ 物件新增成功:', data)
   return data
 }
 
