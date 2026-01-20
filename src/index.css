@@ -10,11 +10,18 @@
 
   html, body, #root {
     height: 100%;
-    overflow: hidden;
   }
 
   body {
-    @apply bg-black text-white font-sans;
+    @apply bg-white text-gray-900 font-sans;
+    overflow-y: auto;
+  }
+
+  /* 只有影片頁面禁用滾動 */
+  body.video-feed-page {
+    overflow: hidden;
+    background-color: black;
+    color: white;
   }
 
   /* 隱藏滾動條 */

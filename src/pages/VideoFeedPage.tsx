@@ -29,6 +29,14 @@ export function VideoFeedPage() {
     fetchProperties()
   }, [fetchProperties])
 
+  // 禁用頁面滾動（只在影片頁）
+  useEffect(() => {
+    document.body.classList.add('video-feed-page')
+    return () => {
+      document.body.classList.remove('video-feed-page')
+    }
+  }, [])
+
   // 處理滑動
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

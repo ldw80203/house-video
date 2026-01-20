@@ -85,7 +85,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-y-auto">
       {/* 頂部導航 */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -104,8 +104,8 @@ export function AdminPage() {
       </header>
 
       {/* 表單 */}
-      <main className="max-w-2xl mx-auto px-4 py-6 pb-24">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 pb-32">
+        <form onSubmit={handleSubmit} className="space-y-6 mb-24">
           {/* 成功提示 */}
           {success && (
             <motion.div
@@ -313,13 +313,14 @@ export function AdminPage() {
           </section>
 
           {/* 提交按鈕 - 固定在底部 */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-20">
             <div className="max-w-2xl mx-auto">
               <motion.button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full py-4 bg-brand-primary text-white font-bold rounded-2xl text-lg
-                           disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                           disabled:opacity-50 disabled:cursor-not-allowed shadow-lg
+                           hover:bg-gray-800 transition-colors"
                 whileTap={{ scale: 0.98 }}
               >
                 {isSubmitting ? '新增中...' : '新增物件'}
