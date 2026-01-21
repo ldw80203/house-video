@@ -162,7 +162,9 @@ export function VideoEditorPage() {
 
     try {
       const timestamp = Date.now()
-      const fileName = `${timestamp}_${video.file.name}`
+      // 取得檔案副檔名，並使用時間戳作為檔名（避免中文字元問題）
+      const extension = video.file.name.split('.').pop() || 'mp4'
+      const fileName = `${timestamp}.${extension}`
 
       // 模擬上傳進度
       const progressInterval = setInterval(() => {
