@@ -6,20 +6,23 @@ import {
   AdminPage,
   LoginPage,
   ChatListPage,
-  ChatRoomPage
+  ChatRoomPage,
+  VideoEditorPage
 } from '@/pages'
 
 function App() {
   return (
     <div className="h-full">
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<VideoFeedPage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/feed" element={<VideoFeedPage />} />
         <Route path="/list" element={<ListPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/chat" element={<ChatListPage />} />
         <Route path="/chat/:roomId" element={<ChatRoomPage />} />
+        <Route path="/editor" element={<VideoEditorPage />} />
       </Routes>
     </div>
   )

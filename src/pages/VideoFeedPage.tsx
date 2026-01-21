@@ -221,12 +221,13 @@ export function VideoFeedPage() {
       <header className="absolute top-0 left-0 right-0 z-20 safe-area-inset-top">
         <div className="flex items-center justify-between p-4">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full
                        flex items-center justify-center text-white"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </button>
 
@@ -234,16 +235,28 @@ export function VideoFeedPage() {
             {currentIndex + 1} / {properties.length}
           </span>
 
-          <button
-            onClick={() => setShowFilter(true)}
-            className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full
-                       flex items-center justify-center text-white"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/editor')}
+              className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full
+                         flex items-center justify-center text-white"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setShowFilter(true)}
+              className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full
+                         flex items-center justify-center text-white"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
