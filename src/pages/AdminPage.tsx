@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { createProperty } from '@/lib/supabase'
-import { isValidYouTubeUrl } from '@/utils/youtube'
+import { createProperty, supabase } from '@/lib/supabase'
+import { isValidYouTubeUrl, getYouTubeThumbnail } from '@/utils/youtube'
 import { DISTRICTS, ROOM_TYPES } from '@/types'
 import type { PropertyFormData } from '@/types'
+
+type VideoSource = 'youtube' | 'upload'
 
 const initialFormData: PropertyFormData = {
   title: '',
@@ -21,10 +23,20 @@ const initialFormData: PropertyFormData = {
 
 export function AdminPage() {
   const navigate = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // 影片相關狀態
+  const [videoSource, setVideoSource] = useState<VideoSource>('upload')
+  const [localVideoFile, setLocalVideoFile] = useState<File | null>(null)
+  const [localVideoUrl, setLocalVideoUrl] = useState<string>('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   // 計算單坪價格預覽
   const pricePerPing = formData.size > 0
@@ -42,10 +54,82 @@ export function AdminPage() {
     setError(null)
   }
 
+  // 處理本地影片選擇
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      setError('請選擇影片檔案')
+      return
+    }
+
+    // 清除舊的 URL
+    if (localVideoUrl) {
+      URL.revokeObjectURL(localVideoUrl)
+    }
+
+    const url = URL.createObjectURL(file)
+    setLocalVideoFile(file)
+    setLocalVideoUrl(url)
+    setError(null)
+  }
+
+  // 上傳影片到 Supabase Storage
+  const uploadVideoToStorage = async (): Promise<string | null> => {
+    if (!localVideoFile) return null
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    try {
+      const timestamp = Date.now()
+      const extension = localVideoFile.name.split('.').pop() || 'mp4'
+      const fileName = `${timestamp}.${extension}`
+
+      // 模擬上傳進度
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90))
+      }, 200)
+
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(`uploads/${fileName}`, localVideoFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      clearInterval(progressInterval)
+
+      if (uploadError) throw uploadError
+
+      // 取得公開 URL
+      const { data: urlData } = supabase.storage
+        .from('videos')
+        .getPublicUrl(`uploads/${fileName}`)
+
+      setUploadProgress(100)
+      return urlData.publicUrl
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '未知錯誤'
+      setError(`影片上傳失敗: ${errorMessage}`)
+      return null
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   const validateForm = (): string | null => {
     if (!formData.title.trim()) return '請輸入標題'
-    if (!formData.video_url.trim()) return '請輸入 YouTube 網址'
-    if (!isValidYouTubeUrl(formData.video_url)) return '請輸入有效的 YouTube 網址'
+
+    if (videoSource === 'youtube') {
+      if (!formData.video_url.trim()) return '請輸入 YouTube 網址'
+      if (!isValidYouTubeUrl(formData.video_url)) return '請輸入有效的 YouTube 網址'
+    } else {
+      if (!localVideoFile) return '請選擇要上傳的影片'
+    }
+
     if (!formData.district) return '請選擇地區'
     if (!formData.address.trim()) return '請輸入地址'
     if (formData.price <= 0) return '請輸入有效的價格'
@@ -68,12 +152,34 @@ export function AdminPage() {
     setError(null)
 
     try {
-      const result = await createProperty(formData)
+      let videoUrl = formData.video_url
+
+      // 如果是上傳模式，先上傳影片
+      if (videoSource === 'upload') {
+        const uploadedUrl = await uploadVideoToStorage()
+        if (!uploadedUrl) {
+          setIsSubmitting(false)
+          return
+        }
+        videoUrl = uploadedUrl
+      }
+
+      // 建立物件
+      const result = await createProperty({
+        ...formData,
+        video_url: videoUrl,
+      })
+
       if (result) {
         setSuccess(true)
         setFormData(initialFormData)
-        // 3 秒後重置成功狀態
-        setTimeout(() => setSuccess(false), 3000)
+        setLocalVideoFile(null)
+        setLocalVideoUrl('')
+        setUploadProgress(0)
+        // 3 秒後導航到首頁
+        setTimeout(() => {
+          navigate('/')
+        }, 2000)
       } else {
         setError('新增失敗，請稍後再試')
       }
@@ -99,7 +205,7 @@ export function AdminPage() {
             返回
           </button>
           <h1 className="font-bold text-gray-900">新增物件</h1>
-          <div className="w-16" /> {/* 佔位 */}
+          <div className="w-16" />
         </div>
       </header>
 
@@ -113,7 +219,7 @@ export function AdminPage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              物件新增成功！
+              物件新增成功！即將返回首頁...
             </motion.div>
           )}
 
@@ -132,6 +238,32 @@ export function AdminPage() {
           <section className="bg-white rounded-2xl p-6 shadow-sm">
             <h2 className="font-bold text-gray-900 mb-4">影片資訊</h2>
 
+            {/* 影片來源選擇 */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setVideoSource('upload')}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-colors ${
+                  videoSource === 'upload'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                上傳影片
+              </button>
+              <button
+                type="button"
+                onClick={() => setVideoSource('youtube')}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-colors ${
+                  videoSource === 'youtube'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                YouTube 連結
+              </button>
+            </div>
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -147,22 +279,95 @@ export function AdminPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  YouTube 網址 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  name="video_url"
-                  value={formData.video_url}
-                  onChange={handleChange}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="input-field"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  請先將影片上傳至 YouTube（可設為不公開），再貼上網址
-                </p>
-              </div>
+              {videoSource === 'youtube' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube 網址 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    name="video_url"
+                    value={formData.video_url}
+                    onChange={handleChange}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="input-field"
+                  />
+                  {formData.video_url && isValidYouTubeUrl(formData.video_url) && (
+                    <div className="mt-3 rounded-xl overflow-hidden">
+                      <img
+                        src={getYouTubeThumbnail(formData.video_url, 'high')}
+                        alt="影片預覽"
+                        className="w-full aspect-video object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    上傳影片 <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  {localVideoUrl ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl overflow-hidden bg-black">
+                        <video
+                          ref={videoRef}
+                          src={localVideoUrl}
+                          className="w-full aspect-video object-contain"
+                          controls
+                          playsInline
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 truncate flex-1">
+                          {localVideoFile?.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+                        >
+                          更換影片
+                        </button>
+                      </div>
+                      {isUploading && (
+                        <div className="space-y-2">
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-blue-500 transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                          <p className="text-sm text-gray-500 text-center">
+                            上傳中 {uploadProgress}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+                    >
+                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-gray-600 font-medium">點擊選擇影片</p>
+                      <p className="text-gray-400 text-sm mt-1">支援 MP4, WebM, MOV 格式</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
@@ -317,13 +522,20 @@ export function AdminPage() {
             <div className="max-w-2xl mx-auto">
               <motion.button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="w-full py-4 bg-brand-primary text-white font-bold rounded-2xl text-lg
                            disabled:opacity-50 disabled:cursor-not-allowed shadow-lg
                            hover:bg-gray-800 transition-colors"
                 whileTap={{ scale: 0.98 }}
               >
-                {isSubmitting ? '新增中...' : '新增物件'}
+                {isSubmitting || isUploading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    {isUploading ? `上傳中 ${uploadProgress}%` : '新增中...'}
+                  </span>
+                ) : (
+                  '新增物件'
+                )}
               </motion.button>
             </div>
           </div>

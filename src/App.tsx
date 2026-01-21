@@ -6,8 +6,7 @@ import {
   AdminPage,
   LoginPage,
   ChatListPage,
-  ChatRoomPage,
-  VideoEditorPage
+  ChatRoomPage
 } from '@/pages'
 
 function App() {
@@ -22,7 +21,6 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/chat" element={<ChatListPage />} />
         <Route path="/chat/:roomId" element={<ChatRoomPage />} />
-        <Route path="/editor" element={<VideoEditorPage />} />
       </Routes>
     </div>
   )
