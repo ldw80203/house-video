@@ -200,9 +200,10 @@ export function VideoEditorPage() {
         setUploadProgress(0)
       }, 2000)
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('上傳失敗:', error)
-      setMessage({ type: 'error', text: '上傳失敗，請確認 Supabase Storage 已設定' })
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+      setMessage({ type: 'error', text: `上傳失敗: ${errorMessage}` })
     } finally {
       setIsUploading(false)
     }
