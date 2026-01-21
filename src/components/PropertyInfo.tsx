@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { getOrCreateChatRoom } from '@/lib/chat'
 import type { Property } from '@/types'
-import { formatPrice, formatPricePerPing, formatSize, formatPhone } from '@/utils/format'
+import { formatPrice, formatPricePerPing, formatSize } from '@/utils/format'
 
 interface PropertyInfoProps {
   property: Property

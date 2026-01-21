@@ -11,7 +11,7 @@ export async function getOrCreateChatRoom(
 ): Promise<ChatRoom | null> {
   try {
     // 先檢查是否已存在
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existing } = await supabase
       .from('chat_rooms')
       .select('*')
       .eq('property_id', propertyId)
