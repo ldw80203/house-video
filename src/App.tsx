@@ -1,5 +1,13 @@
 import { Routes, Route } from 'react-router-dom'
-import { HomePage, VideoFeedPage, ListPage, AdminPage } from '@/pages'
+import {
+  HomePage,
+  VideoFeedPage,
+  ListPage,
+  AdminPage,
+  LoginPage,
+  ChatListPage,
+  ChatRoomPage
+} from '@/pages'
 
 function App() {
   return (
@@ -9,6 +17,9 @@ function App() {
         <Route path="/feed" element={<VideoFeedPage />} />
         <Route path="/list" element={<ListPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/chat" element={<ChatListPage />} />
+        <Route path="/chat/:roomId" element={<ChatRoomPage />} />
       </Routes>
     </div>
   )

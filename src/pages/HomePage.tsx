@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/contexts/AuthContext'
 import { usePropertyStore } from '@/store/usePropertyStore'
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const { properties, fetchProperties } = usePropertyStore()
 
   useEffect(() => {
@@ -13,8 +15,54 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 頂部導航 */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <span className="font-bold text-gray-900">影音看房</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {user ? (
+                <>
+                  <button
+                    onClick={() => navigate('/chat')}
+                    className="relative px-4 py-2 text-gray-700 hover:text-brand-primary transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => signOut()}
+                    className="px-4 py-2 text-gray-700 hover:text-brand-primary transition-colors text-sm"
+                  >
+                    登出
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors text-sm font-medium"
+                >
+                  登入
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero 區塊 */}
-      <section className="relative h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+      <section className="relative h-screen flex flex-col items-center justify-center px-6 overflow-hidden pt-16">
         {/* 背景裝飾 */}
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-50" />

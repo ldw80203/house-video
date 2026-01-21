@@ -81,3 +81,40 @@ export const ROOM_TYPES = [
   '3房2廳2衛',
   '4房2廳2衛',
 ] as const
+
+// ============ 認證相關 ============
+
+export interface Profile {
+  id: string
+  display_name: string | null
+  avatar_url: string | null
+  phone: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ============ 聊天室相關 ============
+
+export interface ChatRoom {
+  id: string
+  property_id: string
+  buyer_id: string
+  agent_id: string
+  created_at: string
+  updated_at: string
+  property?: Property
+  buyer_profile?: Profile
+  agent_profile?: Profile
+  last_message?: ChatMessage
+  unread_count?: number
+}
+
+export interface ChatMessage {
+  id: string
+  room_id: string
+  sender_id: string
+  message: string
+  is_read: boolean
+  created_at: string
+  sender_profile?: Profile
+}
